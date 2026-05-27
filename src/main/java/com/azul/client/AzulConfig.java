@@ -100,20 +100,23 @@ public class AzulConfig {
             }
         }
 
-        // Get a section from the ini file or return an empyty section
-        SubnodeConfiguration sec = ini.getSection(section);
-        sec.clear();
-        sec.addProperty("azul_url", azulUrl);
-        sec.addProperty("oidc_url", oidcUrl);
-        sec.addProperty("auth_type", authType);
-        sec.addProperty("auth_scopes", authScopes);
-        sec.addProperty("auth_client_id", authClientId);
-        sec.addProperty("auth_client_secret", authClientSecret);
-        sec.addProperty("azul_verify_ssl", String.valueOf(azulVerifySsl));
-        sec.addProperty("auth_token", MAPPER.writeValueAsString(authToken));
-        sec.addProperty("auth_token_time", String.valueOf(authTokenTime));
-        sec.addProperty("max_timeout", String.valueOf(maxTimeout));
-        sec.addProperty("oidc_timeout", String.valueOf(oidcTimeout));
+        // Clear the section from the parent INI directly, then re-add via the parent
+        // using section-prefixed keys. Using SubnodeConfiguration.clear() + addProperty()
+        // has a bug in Commons Config 2 where mutations after clear() don't propagate
+        // back to the parent, causing the section to be written as empty.
+        ini.clearTree(section);
+        String pre = section + ".";
+        ini.addProperty(pre + "azul_url", azulUrl);
+        ini.addProperty(pre + "oidc_url", oidcUrl);
+        ini.addProperty(pre + "auth_type", authType);
+        ini.addProperty(pre + "auth_scopes", authScopes);
+        ini.addProperty(pre + "auth_client_id", authClientId);
+        ini.addProperty(pre + "auth_client_secret", authClientSecret);
+        ini.addProperty(pre + "azul_verify_ssl", String.valueOf(azulVerifySsl));
+        ini.addProperty(pre + "auth_token", MAPPER.writeValueAsString(authToken));
+        ini.addProperty(pre + "auth_token_time", String.valueOf(authTokenTime));
+        ini.addProperty(pre + "max_timeout", String.valueOf(maxTimeout));
+        ini.addProperty(pre + "oidc_timeout", String.valueOf(oidcTimeout));
 
         try (FileWriter writer = new FileWriter(configPath.toFile())) {
             ini.write(writer);
