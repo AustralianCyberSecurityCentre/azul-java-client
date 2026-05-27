@@ -69,6 +69,9 @@ public class AzulClient {
 
         // Check for a successful response
         HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() == 404) {
+            throw new BinaryNotFoundException(sha256);
+        }
         if (resp.statusCode() != 200 && resp.statusCode() != 206) {
             throw new Exception("Bad response from Azul: " + resp.statusCode() + " - " + resp.body());
         }
