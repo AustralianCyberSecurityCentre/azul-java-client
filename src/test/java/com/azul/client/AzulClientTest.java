@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
 
 import java.io.IOException;
 
@@ -133,6 +134,52 @@ class AzulClientTest {
 
         JsonNode data = makeClient(wm).find("size:>1000");
         assertNotNull(data);
+    }
+
+    // -------------------------------------------------------------------------
+    // findSimple — mirrors Python BinariesMeta.find_simple()
+    // -------------------------------------------------------------------------
+    @Test
+    void testFindSimple_basic(WireMockRuntimeInfo wm) throws Exception {
+        stubFor(post(urlPathEqualTo("/api/v0/binaries"))
+                .willReturn(okJson("{\"data\":{\"entities\":[{\"sha256\":\"abc\"}],\"total\":1}}")));
+
+        FindOptions opts = new FindOptions();
+        opts.sourceUsername = "testuser";
+
+        JsonNode data = makeClient(wm).findSimple(opts);
+
+        assertTrue(data.get("total").asInt() >= 1);
+        assertNotNull(data.get("entities"));
+    }
+
+    @Test
+    void testFindSimple_limit(WireMockRuntimeInfo wm) throws Exception {
+        stubFor(post(urlPathEqualTo("/api/v0/binaries"))
+                .withQueryParam("max_entities", equalTo("2"))
+                .willReturn(
+                        okJson("{\"data\":{\"entities\":[{\"sha256\":\"abc\"},{\"sha256\":\"def\"}],\"total\":2}}")));
+
+        FindOptions opts = new FindOptions();
+        opts.sourceUsername = "testuser";
+
+        JsonNode data = makeClient(wm).findSimple(opts, 2, null);
+
+        assertTrue(data.get("entities").size() >= 2);
+    }
+
+    @Test
+    void testFindSimple_count(WireMockRuntimeInfo wm) throws Exception {
+        stubFor(post(urlPathEqualTo("/api/v0/binaries"))
+                .withQueryParam("count_entities", equalTo("true"))
+                .willReturn(okJson("{\"data\":{\"entities\":[],\"total\":0,\"items_count\":42}}")));
+
+        FindOptions opts = new FindOptions();
+        opts.sourceUsername = "testuser";
+
+        JsonNode data = makeClient(wm).findSimple(opts, null, true);
+
+        assertNotNull(data.get("items_count"));
     }
 
 }
