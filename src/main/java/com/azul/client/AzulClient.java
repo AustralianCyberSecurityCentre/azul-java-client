@@ -118,15 +118,6 @@ public class AzulClient {
         return baseFindRequest(options.toQuery(), maxEntities, countEntities, null);
     }
 
-    /**
-     * Check which hashes from the provided list exist in Azul and return their
-     * summary.
-     * Mirrors azul-client's BinariesMeta.find_hashes().
-     */
-    public JsonNode findHashes(List<String> hashes) throws Exception {
-        return baseFindRequest(null, null, null, hashes);
-    }
-
     private JsonNode baseFindRequest(String term, Integer maxEntities, Boolean countEntities, List<String> hashes)
             throws Exception {
         Map<String, Object> params = new LinkedHashMap<>();
